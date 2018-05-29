@@ -21,46 +21,16 @@ class Square extends React.Component {
 class Board extends React.Component {
     constructor(props) {
         super(props);
-        this.state = {
-            squares: Array(9).fill(null),
-            xIsNext: true
-        }
-        // this.handleClick = this.handleClick.bind(this);
-    }
-
-    handleClick(i) {
-        // Not mutating the data directly gives us better overall application performance
-        // If the object being referenced is different from before, then the object has changed. That’s it.
-        const squares = this.state.squares.slice(); // Immutability is important in React
-        if (calculateWinner(squares) || squares[i]) {
-            return;
-        }
-        squares[i] = this.state.xIsNext ? 'X' : 'O';
-        const xIsNext = !this.state.xIsNext;
-        this.setState({
-            squares,
-            xIsNext
-        }); // setState is async, you  don't know hwen it happens
     }
 
     renderSquare(i) {
         // Arrow function has literal `this` context
-        return <Square value={this.state.squares[i]} onClick={() => this.handleClick(i)} />
+        return <Square value={this.props.squares[i]} onClick={() => this.props.onClick(i)} />
     }
 
     render() {
-        const winner = calculateWinner(this.state.squares);
-        let status;
-
-        if (winner) {
-            status = `Winner: ${winner}`
-        } else {
-            status = `Next play: ${this.state.xIsNext ? 'X' : 'O'}`;
-        }
-
         return (
             <div>
-                <div className="status">{status}</div>
                 <div className="board-row">
                     {this.renderSquare(0)}
                     {this.renderSquare(1)}
@@ -92,13 +62,44 @@ class Game extends React.Component {
         }
     }
 
+    handleClick(i) {
+        const history = this.state.history;
+        const current = history[history.length - 1];
+        // Not mutating the data directly gives us better overall application performance
+        // If the object being referenced is different from before, then the object has changed. That’s it.
+        const squares = current.squares.slice(); // Immutability is important in React
+        const xIsNext = !this.state.xIsNext;
+        if(calculateWinner(squares)|| squares[i]) {
+            return;
+        }
+        squares[i] = this.state.xIsNext ? 'X': 'O';
+        this.setState({
+            history: history.concat([
+                {
+                    squares
+                }
+            ]),
+            xIsNext
+        });// setState is async, you  don't know when it happens
+    }
 
     render() {
+        const history = this.state.history;
+        const current = history[history.length - 1];
+        const winner = calculateWinner(current.squares);
+        let status;
+        if (winner) {
+            status = `Winner: ${winner}`;
+        } else {
+            status = `Next player: ${this.state.xIsNext ? 'X' : 'O'}`
+        }
         return (
             <div className="game">
-                <div className="game-board"><Board /></div>
+                <div className="game-board">
+                    <Board squares={current.squares} onClick={(i) => this.handleClick(i)}/>
+                </div>
                 <div className="game-info">
-                    <div>{/*{status} */}</div>
+                    <div>{status}</div>
                     <ol>{/*TODO*/}</ol>
                 </div>
             </div>
